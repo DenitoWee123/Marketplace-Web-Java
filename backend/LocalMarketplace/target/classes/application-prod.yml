@@ -1,0 +1,14 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+marketplace:
+  log-level: INFO
+  log-file: logs/marketplace-prod.log
+
+# is it okay this -  bg.uni.isn.localmarketplace ???
+logging:
+  level:
+    root: WARN
+    bg.uni.isn.localmarketplace: INFO

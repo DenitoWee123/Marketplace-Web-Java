@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: LocalMarketplace
+
+  profiles:
+    active: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/marketplace?currentSchema=market
+    username: postgres
+    password: 123456789
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: market
+        format_sql: true
+    show-sql: true
+
+  liquibase:
+    change-log: classpath:db.changelog/db.changelog-master.yaml
+    default-schema: market
+
+server:
+  port: 8099
+
+app:
+  jwt:
+    secret: dGhpcy1pcy1hLXNlY3JldC1rZXktZm9yLWxvY2FsLW1hcmtldHBsYWNlLWRldi1jaGFuZ2UtbWU=
+    expiration-ms: 86400000

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocalMarketplace</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       NAV — hidden until a JWT is in localStorage
+       ══════════════════════════════════════════════════════ -->
+  <nav id="app-nav" style="display:none">
+    <span class="nav-brand">LocalMarketplace</span>
+    <ul class="nav-links">
+      <li><a href="#" data-view="products">Products</a></li>
+      <li><a href="#" data-view="cart">Cart</a></li>
+      <li><a href="#" data-view="orders">Orders</a></li>
+      <li><a href="#" data-view="events">Events</a></li>
+    </ul>
+    <div class="nav-user">
+      <span id="nav-username"></span>
+      <button id="btn-logout" class="btn btn-secondary btn-sm">Logout</button>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MAIN CONTENT — one <section> per view, switched by JS
+       ══════════════════════════════════════════════════════ -->
+  <main id="app-main">
+
+    <!-- Auth view — always present; shown when logged out -->
+    <section id="view-auth"></section>
+
+    <!-- ─────────────────────────────────────────────────────
+         SLOT: Products
+         File to create: src/main/resources/static/js/products.js
+         Pattern: call API.get('/api/products') here.
+         Mount point: fill in the innerHTML of this <section>
+         or append child nodes to it from products.js.
+         ───────────────────────────────────────────────────── -->
+    <section id="view-products" hidden>
+      <!-- products.js fills this section -->
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+         SLOT: Cart
+         File to create: src/main/resources/static/js/cart.js
+         Endpoints: GET /api/users/me/cart, POST /api/users/me/cart/items, ...
+         ───────────────────────────────────────────────────── -->
+    <section id="view-cart" hidden>
+      <!-- cart.js fills this section -->
+    </section>
+
+
+    <!-- ─────────────────────────────────────────────────────
+        SLOT: Checkout
+        Target of the Cart's "Checkout" button (window.__showView('checkout')).
+        File to create: src/main/resources/static/js/checkout.js (or orders.js)
+        Flow: review cart → POST /api/orders (paymentMethod + currency)
+              → PATCH /api/orders/{id}/pay → order confirmation.
+        NOTE: the cart only hands off here; it does NOT place orders or pay.
+        ───────────────────────────────────────────────────── -->
+    <section id="view-checkout" hidden>
+      <!-- checkout.js / orders.js fills this -->
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+         SLOT: Orders
+         File to create: src/main/resources/static/js/orders.js
+         Endpoints: GET /api/orders, POST /api/orders, ...
+         ───────────────────────────────────────────────────── -->
+    <section id="view-orders" hidden>
+      <!-- orders.js fills this section -->
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+         SLOT: Events
+         File to create: src/main/resources/static/js/events.js
+         Endpoints: GET /api/events, POST /api/events, ...
+         ───────────────────────────────────────────────────── -->
+    <section id="view-events" hidden>
+      <!-- events.js fills this section -->
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SHARED SCRIPTS — must load before feature scripts
+       ══════════════════════════════════════════════════════ -->
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+
+  <!-- FEATURE SCRIPTS — uncomment as teammates implement them
+  <script src="/js/products.js"></script>
+  -->
+  <script src="/js/cart.js"></script>
+  <!--
+  <script src="/js/orders.js"></script>
+  -->
+  <script src="/js/events.js"></script>
+  <!--
+  -->
+
+  <!-- ═══════════════════════════════════════════════════════
+       SHELL ROUTER — switches active view, syncs nav
+       ══════════════════════════════════════════════════════ -->
+  <script>
+    'use strict';
+
+    /**
+     * showView(name) — the only routing primitive in the app.
+     *
+     * Hides every #view-* section, reveals #view-<name>,
+     * and shows/hides the nav based on whether a JWT exists.
+     *
+     * Called by:
+     *  - auth.js   (after login → 'products', after logout → 'auth')
+     *  - api.js    (on 401     → 'auth')  via window.__showView
+     *  - nav links (click)
+     *  - this boot block
+     */
+    function showView(name) {
+      document.querySelectorAll('#app-main > section').forEach(s => s.hidden = true);
+      const target = document.getElementById('view-' + name);
+      if (target) target.hidden = false;
+
+      const loggedIn = !!localStorage.getItem('jwtToken');
+      const nav = document.getElementById('app-nav');
+      // Use style.display so it wins over the CSS display:flex rule
+      nav.style.display = loggedIn ? 'flex' : 'none';
+      document.getElementById('nav-username').textContent =
+        localStorage.getItem('username') || '';
+
+      // Highlight the active nav link
+      document.querySelectorAll('[data-view]').forEach(a =>
+        a.classList.toggle('active', a.dataset.view === name));
+    }
+
+    // Expose to api.js and auth.js (loaded before this block runs)
+    window.__showView = showView;
+
+    // Wire nav link clicks
+    document.querySelectorAll('[data-view]').forEach(a => {
+      a.addEventListener('click', e => { e.preventDefault(); showView(a.dataset.view); });
+    });
+
+    // ── Boot ────────────────────────────────────────────────
+    Auth.init();
+    Cart.init();
+    Events.init();
+
+    if (localStorage.getItem('jwtToken')) {
+      showView('products');
+    } else {
+      showView('auth');
+    }
+  </script>
+
+</body>
+</html>

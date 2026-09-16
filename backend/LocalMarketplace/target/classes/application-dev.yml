@@ -1,0 +1,16 @@
+server:
+  port: 9090
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+marketplace:
+  log-level: DEBUG
+  log-file: logs/marketplace-dev.log
+
+# is it okay this -  bg.uni.isn.localmarketplace ???
+logging:
+  level:
+    root: INFO
+    bg.uni.isn.localmarketplace: DEBUG
